@@ -30,9 +30,16 @@ const getPlacesById = async (req, res) => {
   }
 };
 
-const getPlaceByUserId = (req, res) => {
-  const places = DUMMY_PLACES.find((p) => p.creator === req.params.uid);
-  res.send({ places });
+const getPlaceByUserId = async (req, res) => {
+  try {
+    const places = await Place.find({ creator: req.params.uid });
+    if (!places) {
+      throw new HttpErrors('Could not find places', 404);
+    }
+    res.status(200).json({ places });
+  } catch (error) {
+    throw new HttpErrors('Cannot get places', 422);
+  }
 };
 
 const createPlace = async (req, res) => {
@@ -66,30 +73,42 @@ const createPlace = async (req, res) => {
   }
 };
 
-const updatePlace = (req, res) => {
+const updatePlace = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new HttpErrors('Invalid inputs passed, please check your data', 422);
   }
   const { title, description } = req.body;
-  const place = { ...DUMMY_PLACES.find((p) => p.id === req.params.pid) };
-  const placeIndex = DUMMY_PLACES.findIndex((p) => p.id === req.params.pid);
-  if (!place) {
-    throw new HttpErrors('Could not find place', 404);
+  try {
+    const place = await Place.findById(req.params.pid);
+    if (!place) {
+      throw new HttpErrors('Could not find place', 404);
+    }
+  } catch (error) {
+    throw new HttpErrors('Cannot update place', 422);
   }
+
   place.title = title;
   place.description = description;
-  DUMMY_PLACES[placeIndex] = place;
-  res.status(200).json({ place });
+  try {
+    await place.save();
+    res.status(200).json({ place });
+  } catch (error) {
+    throw new HttpErrors('Cannot update place', 422);
+  }
 };
 
-const deletePlace = (req, res) => {
-  const placeIndex = DUMMY_PLACES.findIndex((p) => p.id === req.params.pid);
-  if (!placeIndex) {
-    throw new HttpErrors('Could not find place', 404);
+const deletePlace = async (req, res) => {
+  try {
+    const place = await Place.findById(req.params.pid).populate('creator');
+    if (!place) {
+      throw new HttpErrors('Could not find place', 404);
+    }
+    await place.remove();
+    res.status(200).json({ message: 'Deleted place' });
+  } catch (error) {
+    throw new HttpErrors('Cannot delete place', 422);
   }
-  DUMMY_PLACES.splice(placeIndex, 1);
-  res.status(200).json({ message: 'Deleted place' });
 };
 
 module.exports = {
