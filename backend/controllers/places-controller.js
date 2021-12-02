@@ -4,20 +4,6 @@ const { validationResult } = require('express-validator');
 const getCoordsForAddress = require('../util/location');
 const Place = require('../models/Place');
 
-const DUMMY_PLACES = [
-  {
-    id: 'p1',
-    title: 'Place 1',
-    description: 'Description 1',
-    location: {
-      lat: 1,
-      lng: 1,
-    },
-    address: 'address1',
-    creator: 'user1',
-  },
-];
-
 const getPlacesById = async (req, res) => {
   try {
     const place = await Place.findById(req.params.pid);
@@ -76,7 +62,9 @@ const createPlace = async (req, res) => {
 const updatePlace = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new HttpErrors('Invalid inputs passed, please check your data', 422);
+    return next(
+      new HttpErrors('Invalid inputs passed, please check your data', 422)
+    );
   }
   const { title, description } = req.body;
   try {

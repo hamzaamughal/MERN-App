@@ -1,34 +1,39 @@
-const {
-  getPlacesById,
-  getPlaceByUserId,
-  createPlace,
-  updatePlace,
-  deletePlace,
-} = require('../controllers/places-controller');
+const express = require('express');
 const { check } = require('express-validator');
 
-const router = require('express').Router();
+const placesControllers = require('../controllers/places-controllers');
 
-router.get('/:pid', getPlacesById);
+const router = express.Router();
 
-router.get('/user/:uid', getPlaceByUserId);
+router.get('/:pid', placesControllers.getPlaceById);
+
+router.get('/user/:uid', placesControllers.getPlacesByUserId);
 
 router.post(
   '/',
   [
-    check('title').not().isEmpty(),
+    check('title')
+      .not()
+      .isEmpty(),
     check('description').isLength({ min: 5 }),
-    check('address').not().isEmpty(),
+    check('address')
+      .not()
+      .isEmpty()
   ],
-  createPlace
+  placesControllers.createPlace
 );
 
 router.patch(
   '/:pid',
-  [check('title').not().isEmpty(), check('description').isLength({ min: 5 })],
-  updatePlace
+  [
+    check('title')
+      .not()
+      .isEmpty(),
+    check('description').isLength({ min: 5 })
+  ],
+  placesControllers.updatePlace
 );
 
-router.delete('/:pid', deletePlace);
+router.delete('/:pid', placesControllers.deletePlace);
 
 module.exports = router;
